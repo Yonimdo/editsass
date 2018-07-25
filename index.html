@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sass Variables</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.6/angular.min.js"></script>
+    <style>
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        h1{
+            text-decoration: underline;
+        }
+
+        .page {
+            border-radius: 5px;
+            background-color: #f2f2f2;
+            padding: 20px;
+            width: 80%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        input[type=text], select {
+            width: 40%;
+        }
+
+        input[type=text], select, button {
+            padding: 12px 4px;
+            margin: 2px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button.submit {
+            width: 50%;
+            background-color: #4CAF50;
+            color: white;
+            padding: 14px 20px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 4px;
+            float: right;
+        }
+        button.add{
+            width: 20%;
+            background-color: white;
+            font-weight: 700;
+            font-size: 26px;
+            padding: 6px 4px;
+        }
+
+        .line {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+        }
+
+        .title {
+            color: darkred;
+            font-weight: bolder;
+        }
+
+        .line > span {
+            padding: 0 7px;
+        }
+
+    </style>
+
+</head>
+<body data-ng-app="myApp">
+<h1>Sass Variables Generator</h1>
+
+<div id="values" ng-controller="Values" class="page">
+
+
+    <div ng-repeat="x in values" class="line">
+        <input class="title" type="text" ng-model="x.name"/>
+        <span style="{{ 'background:' +getColor(x.value)+ ';'}}"></span>
+        <input class="value" type="text" ng-model="x.value"/>
+
+    </div>
+    <button class="add" ng-click="addItem()">+</button>
+    <button class="submit" ng-click="download()">Download Item</button>
+
+</div>
+
+<script>
+    var myApp = angular.module('myApp', []);
+
+    myApp.controller('Values', ['$scope', '$interval', '$timeout', function ($scope, $interval, $timeout) {
+        $scope.changeableText = {value: ""};
+        $scope.contactText = {value: ""};
+        $scope.immutableText = {value: ""};
+        $scope.curser = {value: ""};
+        $scope.values = [];
+        $scope.keys = {};
+
+        $.get('variables.scss').then(s => {
+            let re = /\$[a-z\- ]+\:[^;]+;/g;
+            let m = s.match(re);
+            m = m.map(i => {
+                let pack = i.replace(";", "").split(":");
+                let name = pack[0], val = pack[1];
+                i = {name: name, value: val};
+                return i;
+            });
+            console.log(m);
+            $scope.values = m;
+            $scope.$apply()
+        });
+        $scope.addItem = function () {
+            $scope.values.push({name: "", value: ""});
+
+        };
+        $scope.getColor = function (text) {
+            $scope.values.forEach(v => {
+                text = text.replace(v.name,v.value)
+            });
+            $scope.values.forEach(v => {
+                text = text.replace(v.name,v.value)
+            });
+            return text;
+        };
+
+        $scope.download = function () {
+            result = "";
+            $scope.values.forEach(v => {
+                result += `${v.name}:${v.value};\n`
+            });
+            var element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(result));
+            element.setAttribute('download', "variables.scss");
+
+            element.style.display = 'none';
+            document.body.appendChild(element);
+
+            element.click();
+
+            document.body.removeChild(element);
+        };
+
+
+    }]);
+
+</script>
+
+</body>
+</html>
